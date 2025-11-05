@@ -43,7 +43,7 @@ setup_ubuntu_host() {
 
 	# Add ncurses6 for Ubuntu 18.10+, Ubuntu 20+, Ubuntu 22+, Ubuntu 24+, and Debian Trixie (13+)
 	# Use ncurses5 for older versions
-	if [[ "$DISTRIB" == "Debian" ]] || [[ "$DISTRIB_RELEASE" =~ ^(18\.|2[0-9]\.) ]]; then
+	if [[ "$DISTRIB" == "debian" ]] || [[ "$DISTRIB" == "Debian" ]] || [[ "$DISTRIB_RELEASE" =~ ^(18\.|2[0-9]\.) ]]; then
 		hostdeps="$hostdeps libncurses6"
 	else
 		hostdeps="$hostdeps libncurses5"
