@@ -190,17 +190,31 @@ else
 
 		$FLASH_TOOL --img=$IMAGE --parts=all ${WIPE_OPTION} --soc=$SOC ${RESET_BOARD} ${DEBUG}
 	elif [ "$BOARD" == "VIM4" ] || [ "$BOARD" == "VIM1S" ]; then
-		if [ "$RESET_BOARD" == "yes" ]; then
-			RESET_BOARD="-r 1"
+		if [[ "$(uname -m)" == "aarch64" ]] || [[ "$(uname -m)" == "armv7l" ]]; then
+			if [ "$RESET_BOARD" == "yes" ]; then
+				RESET_BOARD="--reset=y"
+			else
+				RESET_BOARD=
+			fi
+			if [ "$ERASE_ALL" == "yes" ]; then
+				WIPE_OPTION="--wipe"
+			else
+				WIPE_OPTION=
+			fi
+			$FLASH_TOOL --img=$IMAGE --parts=all ${WIPE_OPTION} --soc=$SOC ${RESET_BOARD} ${DEBUG}
 		else
-			RESET_BOARD=
+			if [ "$RESET_BOARD" == "yes" ]; then
+				RESET_BOARD="-r 1"
+			else
+				RESET_BOARD=
+			fi
+			if [ "$ERASE_ALL" == "yes" ]; then
+				ERASE_FLASH="-e 1"
+			else
+				ERASE_FLASH="-e 0"
+			fi
+			$ADNL_TOOL -p $IMAGE ${RESET_BOARD} ${ERASE_FLASH}
 		fi
-		if [ "$ERASE_ALL" == "yes" ]; then
-			ERASE_FLASH="-e 1"
-		else
-			ERASE_FLASH="-e 0"
-		fi
-		$ADNL_TOOL -p $IMAGE ${RESET_BOARD} ${ERASE_FLASH}
 	fi
 fi
 
