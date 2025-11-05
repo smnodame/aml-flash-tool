@@ -6,10 +6,18 @@ BASE=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 FLASH_TOOL="$BASE/flash-tool"
 KHADAS_TOOL="/usr/local/bin/$(basename $0)"
 
+# Detect system architecture for tool selection
+HOST_ARCH=$(uname -m)
 if [ "$(uname -s)" = "Darwin" ]; then
 	ADNL_TOOL="$BASE/tools/adnl/macos/adnl_burn_pkg"
+	USE_FLASH_TOOL=false
+elif [ "$HOST_ARCH" = "aarch64" ] || [ "$HOST_ARCH" = "armv7l" ]; then
+	# ARM architecture: use flash-tool instead of adnl (no ARM version available)
+	ADNL_TOOL="$FLASH_TOOL"
+	USE_FLASH_TOOL=true
 else
 	ADNL_TOOL="$BASE/tools/adnl/adnl_burn_pkg"
+	USE_FLASH_TOOL=false
 fi
 
 IMAGE=
@@ -203,17 +211,33 @@ else
 			fi
 			$FLASH_TOOL --img=$IMAGE --parts=all ${WIPE_OPTION} --soc=$SOC ${RESET_BOARD} ${DEBUG}
 		else
-			if [ "$RESET_BOARD" == "yes" ]; then
-				RESET_BOARD="-r 1"
+			if [ "$USE_FLASH_TOOL" = "true" ]; then
+				# ARM: Use flash-tool with different argument format
+				if [ "$RESET_BOARD" == "yes" ]; then
+					RESET_BOARD="--reset=y"
+				else
+					RESET_BOARD=
+				fi
+				if [ "$ERASE_ALL" == "yes" ]; then
+					WIPE_OPTION="--wipe"
+				else
+					WIPE_OPTION=
+				fi
+				$FLASH_TOOL --img=$IMAGE --parts=all ${WIPE_OPTION} --soc=$SOC ${RESET_BOARD} ${DEBUG}
 			else
-				RESET_BOARD=
+				# x86/macOS: Use adnl_burn_pkg
+				if [ "$RESET_BOARD" == "yes" ]; then
+					RESET_BOARD="-r 1"
+				else
+					RESET_BOARD=
+				fi
+				if [ "$ERASE_ALL" == "yes" ]; then
+					ERASE_FLASH="-e 1"
+				else
+					ERASE_FLASH="-e 0"
+				fi
+				$ADNL_TOOL -p $IMAGE ${RESET_BOARD} ${ERASE_FLASH}
 			fi
-			if [ "$ERASE_ALL" == "yes" ]; then
-				ERASE_FLASH="-e 1"
-			else
-				ERASE_FLASH="-e 0"
-			fi
-			$ADNL_TOOL -p $IMAGE ${RESET_BOARD} ${ERASE_FLASH}
 		fi
 	fi
 fi
