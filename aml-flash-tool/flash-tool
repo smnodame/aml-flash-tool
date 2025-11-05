@@ -249,8 +249,8 @@ fi
 if [[ -z $soc ]]; then
    soc=gxl
 fi
-if [[ "$soc" != "m8" ]] && [[ "$soc" != "gxl" ]] && [[ "$soc" != "axg" ]] && [[ "$soc" != "txlx" ]] && [[ "$soc" != "g12a" ]]; then
-   echo "Soc type is invalid, should be either m8,gxl,axg,txlx,g12a"
+if [[ "$soc" != "m8" ]] && [[ "$soc" != "gxl" ]] && [[ "$soc" != "axg" ]] && [[ "$soc" != "txlx" ]] && [[ "$soc" != "g12a" ]] && [[ "$soc" != "t7" ]] && [[ "$soc" != "s4" ]]; then
+   echo "Soc type is invalid, should be either m8,gxl,axg,txlx,g12a,t7,s4"
    exit 1
 fi
 run_update_return identify 7
@@ -412,7 +412,7 @@ if [[ "$soc" == "gxl" ]]; then
    value=$(($value & 0x10))
    print_debug "Secure boot bit = $value"
 fi
-if [[ "$soc" == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]]; then
+if [[ "$soc" == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]] || [[ $soc == "t7" ]] || [[ $soc == "s4" ]]; then
    run_update_return rreg 4 0xff800228
    value=0x`echo $update_return|grep -i ff800228|awk -F: '{gsub(/ /,"",$2);print $2}'`
    print_debug "0xff800228      = $value"
@@ -581,7 +581,7 @@ if [[ "$parts" == "all" ]] || [[ "$parts" == "bootloader" ]] || [[ "$parts" == "
       done
    fi
    if [[ -z $dtb_file ]]; then
-      if [[ $soc == "gxl" ]] || [[ $soc == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]]; then
+      if [[ $soc == "gxl" ]] || [[ $soc == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]] || [[ $soc == "t7" ]] || [[ $soc == "s4" ]]; then
          for i in $(seq 0 `expr $nb_partitions - 1`)
          do
          if [[ "${partitions_name[$i]}" == "_aml_dtb" ]]; then
@@ -665,7 +665,7 @@ if [[ "$parts" == "all" ]] || [[ "$parts" == "bootloader" ]] || [[ "$parts" == "
          run_update_assert run $bl2_params
       fi
    fi
-   if [[ $soc == "g12a" ]]; then
+   if [[ $soc == "g12a" ]] || [[ $soc == "t7" ]] || [[ $soc == "s4" ]]; then
       run_update_assert write "$tpl" $ddr_load 0x10000
       run_update_assert run $ddr_load
       for i in {1..8}
@@ -701,7 +701,7 @@ if [[ "$parts" == "all" ]] || [[ "$parts" == "bootloader" ]] || [[ "$parts" == "
          run_update_assert run $uboot_run
       fi
    fi
-   if [[ $soc == "g12a" ]]; then
+   if [[ $soc == "g12a" ]] || [[ $soc == "t7" ]] || [[ $soc == "s4" ]]; then
       run_update_assert bl2_boot "$tpl"
    fi
    if [[ $soc == "m8" ]]; then
@@ -740,7 +740,7 @@ if [[ "$parts" == "all" ]] || [[ "$parts" == "bootloader" ]] || [[ "$parts" == "
    run_update bulkcmd "echo 12345"
    #run_update bulkcmd "low_power"
 
-   if [[ $soc == "gxl" ]] || [[ $soc == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]]; then
+   if [[ $soc == "gxl" ]] || [[ $soc == "axg" ]] || [[ $soc == "txlx" ]] || [[ $soc == "g12a" ]] || [[ $soc == "t7" ]] || [[ $soc == "s4" ]]; then
       if [[ $secured == 1 ]]; then
          check_file "$tmp_dir/$dtb_meson1_enc_filename"
          run_update_assert mwrite "$tmp_dir/$dtb_meson1_enc_filename" mem dtb normal
