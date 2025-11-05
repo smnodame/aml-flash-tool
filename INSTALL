@@ -37,13 +37,23 @@ error_msg() {
 }
 
 setup_ubuntu_host() {
-	local hostdeps="libusb-dev git parted libusb-0.1-4 libusb-1.0-0-dev libusb-1.0-0 ccache libncurses5 pv base-files linux-base xz-utils"
+	local hostdeps="libusb-dev git parted libusb-0.1-4 libusb-1.0-0-dev libusb-1.0-0 ccache pv base-files linux-base xz-utils"
 	local deps=()
 	local installed=$(dpkg-query -W -f '${db:Status-Abbrev}|${binary:Package}\n' '*' 2>/dev/null | grep '^ii' | awk -F '|' '{print $2}' | cut -d ':' -f 1)
 
+	# Add ncurses6 for Ubuntu 18.10+, Ubuntu 20+, Ubuntu 22+, Ubuntu 24+, and Debian Trixie (13+)
+	# Use ncurses5 for older versions
+	if [[ "$DISTRIB" == "Debian" ]] || [[ "$DISTRIB_RELEASE" =~ ^(18\.|2[0-9]\.) ]]; then
+		hostdeps="$hostdeps libncurses6"
+	else
+		hostdeps="$hostdeps libncurses5"
+	fi
+
+	# Add 32-bit libraries only for non-ARM architectures
 	if [ "$(uname -m)" != "aarch64" ] && [ "$(uname -m)" != "armv7l" ]; then
 		hostdeps="$hostdeps lib32z1 lib32stdc++6"
-		if [[ "$DISTRIB" == "ubuntu" ]] && [[ "$DISTRIB_RELEASE" == "18.10" || "$DISTRIB_RELEASE" =~ "20" || "$DISTRIB_RELEASE" =~ "22" ]]; then
+		# Add lib32ncurses6 for newer Ubuntu versions on x86/x64
+		if [[ "$DISTRIB_RELEASE" =~ ^(18\.|2[0-9]\.) ]]; then
 			hostdeps="$hostdeps lib32ncurses6"
 		else
 			hostdeps="$hostdeps lib32ncurses5"
